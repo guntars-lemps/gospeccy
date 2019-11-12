@@ -2,7 +2,7 @@ package spectrum
 
 import (
 	"time"
-	"github.com/remogatto/z80"
+	"github.com/guntars-lemps/z80"
 )
 
 type ula_byte_t struct {

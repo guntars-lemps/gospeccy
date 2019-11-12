@@ -3,12 +3,10 @@ package interpreter
 import (
 	"bytes"
 	"fmt"
-	"github.com/remogatto/gospeccy/src/formats"
-	"github.com/remogatto/gospeccy/src/spectrum"
+	"github.com/guntars-lemps/gospeccy/formats"
+	"github.com/guntars-lemps/gospeccy/spectrum"
 	"github.com/sbinet/go-eval"
 	"io/ioutil"
-	"net/url"
-	"strings"
 	"time"
 )
 
@@ -96,7 +94,7 @@ func wrapper_exit(t *eval.Thread, in []eval.Value, out []eval.Value) {
 func wrapper_vars(t *eval.Thread, in []eval.Value, out []eval.Value) {
 	vars := make([]eval.Value, 0, len(intp.vars))
 
-	for varName, _ := range intp.vars {
+	for varName := range intp.vars {
 		s := string_value_t(varName)
 		vars = append(vars, &s)
 	}
@@ -353,86 +351,6 @@ func url_printer(URL eval.Value) string {
 	return s
 }
 
-// Signature: func wosFind(pattern string) []WOS
-func wrapper_wosFind(t *eval.Thread, in []eval.Value, out []eval.Value) {
-	if app.TerminationInProgress() || app.Terminated() {
-		return
-	}
-
-	pattern := in[0].(eval.StringValue).Get(t)
-	pattern = strings.Replace(pattern, " ", "*", -1)
-
-	var records []spectrum.WosRecord
-	records, err := spectrum.WosQuery(app, "regexp="+url.QueryEscape(pattern))
-	if err != nil {
-		fmt.Fprintf(stdout, "%s", err)
-
-		var emptySlice eval.Slice
-		out[0].(eval.SliceValue).Set(t, emptySlice)
-		return
-	}
-
-	var woss []eval.Value
-	for _, r := range records {
-		for _, url := range r.FtpFiles {
-			mac_value := string_value_t(r.MachineType)
-			pub_value := string_value_t(r.Publication)
-			sco_value := string_value_t(r.Score)
-			url_value := string_value_t(url)
-
-			var wos struct_value_t
-			wos.fields = []eval.Value{&url_value, &mac_value, &pub_value, &sco_value}
-			wos.names = []string{"URL", "Machine type", "Publication", "Score"}
-			wos.printers_orNil = []func(eval.Value) string{url_printer, nil, nil, nil}
-			wos.hide_orNil = nil
-			wos.printStyle = MULTI_LINE
-
-			woss = append(woss, &wos)
-		}
-	}
-
-	var slice eval.Slice
-	base := array_value_t(woss)
-	slice.Base = &base
-	slice.Len = int64(len(woss))
-	slice.Cap = int64(len(woss))
-
-	out[0].(eval.SliceValue).Set(t, slice)
-}
-
-// Signature: func wosDownload(wos WOS) string
-func wrapper_wosDownload(t *eval.Thread, in []eval.Value, out []eval.Value) {
-	if app.TerminationInProgress() || app.Terminated() {
-		return
-	}
-
-	var url string = in[0].(eval.StructValue).Field(t, 0).(eval.StringValue).Get(t)
-	filePath, err := spectrum.WosGet(app, stdout, url)
-	if err != nil {
-		fmt.Fprintf(stdout, "%s", err)
-		out[0].(eval.StringValue).Set(t, "")
-		return
-	}
-
-	out[0].(eval.StringValue).Set(t, filePath)
-}
-
-// Signature: func wosLoad(wos WOS)
-func wrapper_wosLoad(t *eval.Thread, in []eval.Value, out []eval.Value) {
-	if app.TerminationInProgress() || app.Terminated() {
-		return
-	}
-
-	var url string = in[0].(eval.StructValue).Field(t, 0).(eval.StringValue).Get(t)
-	filePath, err := spectrum.WosGet(app, stdout, url)
-	if err != nil {
-		fmt.Fprintf(stdout, "%s", err)
-		return
-	}
-
-	load(filePath)
-}
-
 // ==============
 // Initialization
 // ==============
@@ -563,27 +481,6 @@ func defineFunctions(w *eval.World) {
 		defineFunction("acceleratedLoad", funcType, funcValue)
 		help_keys = append(help_keys, "acceleratedLoad(on bool)")
 		help_vals = append(help_vals, "Set accelerated tape load on/off")
-	}
-	{
-		var functionSignature func(string) []WOS
-		funcType, funcValue := eval.FuncFromNativeTyped(wrapper_wosFind, functionSignature)
-		defineFunction("wosFind", funcType, funcValue)
-		help_keys = append(help_keys, "wosFind(pattern string) []WOS")
-		help_vals = append(help_vals, "Find tapes and snapshots on worldofspectrum.org")
-	}
-	{
-		var functionSignature func(WOS) string
-		funcType, funcValue := eval.FuncFromNativeTyped(wrapper_wosDownload, functionSignature)
-		defineFunction("wosDownload", funcType, funcValue)
-		help_keys = append(help_keys, "wosDownload(wos WOS) string")
-		help_vals = append(help_vals, "Download from worldofspectrum.org")
-	}
-	{
-		var functionSignature func(WOS)
-		funcType, funcValue := eval.FuncFromNativeTyped(wrapper_wosLoad, functionSignature)
-		defineFunction("wosLoad", funcType, funcValue)
-		help_keys = append(help_keys, "wosLoad(wos WOS)")
-		help_vals = append(help_vals, "Same as load(wosDownload(wos))")
 	}
 
 	for _, f := range functionsToAdd {

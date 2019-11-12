@@ -8,8 +8,8 @@ import (
 
 	//"strings"
 	"github.com/scottferg/Go-SDL/sdl"
-	"github.com/remogatto/gospeccy/src/formats"
-	"github.com/remogatto/gospeccy/src/spectrum"
+	"github.com/guntars-lemps/gospeccy/formats"
+	"github.com/guntars-lemps/gospeccy/spectrum"
 	"testing"
 	//"unsafe"
 )

@@ -25,7 +25,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 package spectrum
 
-import "github.com/remogatto/z80"
+import "github.com/guntars-lemps/z80"
 
 type FrameStatusOfPorts struct {
 	shouldPlayTheTape bool

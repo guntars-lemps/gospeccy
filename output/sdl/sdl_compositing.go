@@ -11,7 +11,7 @@ package sdl_output
 
 import (
 	"github.com/scottferg/Go-SDL/sdl"
-	"github.com/remogatto/gospeccy/src/spectrum"
+	"github.com/guntars-lemps/gospeccy/spectrum"
 	"math/rand"
 	"unsafe"
 )

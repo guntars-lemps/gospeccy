@@ -3,7 +3,7 @@
 package sdl_output
 
 import (
-	intp "github.com/remogatto/gospeccy/src/interpreter"
+	intp "github.com/guntars-lemps/gospeccy/interpreter"
 	"github.com/sbinet/go-eval"
 	"sync"
 )

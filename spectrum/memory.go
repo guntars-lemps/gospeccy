@@ -1,6 +1,6 @@
 package spectrum
 
-import "github.com/remogatto/z80"
+import "github.com/guntars-lemps/z80"
 
 type Memory struct {
 	data [0x10000]byte

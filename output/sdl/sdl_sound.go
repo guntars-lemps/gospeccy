@@ -14,7 +14,7 @@ import (
 	"fmt"
 	"github.com/scottferg/Go-SDL/sdl"
 	sdl_audio "github.com/scottferg/Go-SDL/sdl/audio"
-	"github.com/remogatto/gospeccy/src/spectrum"
+	"github.com/guntars-lemps/gospeccy/spectrum"
 	"math"
 	"os"
 	"sync"

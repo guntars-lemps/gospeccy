@@ -31,9 +31,9 @@ import (
 	"errors"
 	"sync"
 	"time"
-	"github.com/remogatto/Go-PerfEvents"
-	"github.com/remogatto/gospeccy/src/formats"
-	"github.com/remogatto/z80"
+	//	"github.com/remogatto/Go-PerfEvents"
+	"github.com/guntars-lemps/gospeccy/formats"
+	"github.com/guntars-lemps/z80"
 )
 
 const TStatesPerFrame = 69888 // Number of T-states per frame
@@ -114,7 +114,6 @@ type Spectrum48k struct {
 	z80_instructionCounter     uint64 // Number of Z80 instructions executed
 	z80_instructionsMeasured   uint64 // Number of Z80 instrs that can be related to 'hostCpu_instructionCounter'
 	hostCpu_instructionCounter uint64
-	perfCounter_hostCpuInstr   *perf.Counter // Can be nil (if creating the counter fails)
 }
 
 type Cmd_Reset struct {
@@ -571,10 +570,7 @@ func (speccy *Spectrum48k) GetEmulationEfficiency() uint {
 }
 
 func (speccy *Spectrum48k) close() {
-	if speccy.perfCounter_hostCpuInstr != nil {
-		speccy.perfCounter_hostCpuInstr.Close()
-		speccy.perfCounter_hostCpuInstr = nil
-	}
+	//
 }
 
 // Initializes state from the specified snapshot.
@@ -658,7 +654,7 @@ func (speccy *Spectrum48k) MakeSnapshot() *formats.FullSnapshot {
 	s.Cpu.IFF2 = speccy.Cpu.IFF2
 	s.Cpu.IM = speccy.Cpu.IM
 
-	s.Cpu.R = byte(speccy.Cpu.R & 0x7f) | (speccy.Cpu.R7 & 0x80)
+	s.Cpu.R = byte(speccy.Cpu.R&0x7f) | (speccy.Cpu.R7 & 0x80)
 
 	s.Cpu.SP = speccy.Cpu.SP()
 	s.Cpu.PC = speccy.Cpu.PC()
@@ -673,18 +669,6 @@ func (speccy *Spectrum48k) MakeSnapshot() *formats.FullSnapshot {
 }
 
 func (speccy *Spectrum48k) doOpcodes() {
-	var ttid_start int
-	if speccy.perfCounter_hostCpuInstr != nil {
-		ttid_start = speccy.perfCounter_hostCpuInstr.Gettid()
-	} else {
-		ttid_start = -1
-	}
-
-	var hostCpu_instrCount_start uint64 = 0
-	var hostCpu_instrCount_startErr error = nil
-	if speccy.perfCounter_hostCpuInstr != nil {
-		hostCpu_instrCount_start, hostCpu_instrCount_startErr = speccy.perfCounter_hostCpuInstr.Read()
-	}
 
 	var z80_localInstructionCounter uint = 0
 
@@ -739,46 +723,6 @@ func (speccy *Spectrum48k) doOpcodes() {
 			}
 		}
 	}
-
-	// Update emulation efficiency counters
-	if speccy.perfCounter_hostCpuInstr != nil {
-		ttid_end := speccy.perfCounter_hostCpuInstr.Gettid()
-
-		var hostCpu_instrCount_end uint64
-		var hostCpu_instrCount_endErr error
-		hostCpu_instrCount_end, hostCpu_instrCount_endErr = speccy.perfCounter_hostCpuInstr.Read()
-
-		speccy.z80_instructionCounter += uint64(z80_localInstructionCounter)
-
-		/*if z80_localInstructionCounter > 0 {
-		 println( z80_localInstructionCounter, hostCpu_instrCount_start, hostCpu_instrCount_end,
-		 hostCpu_instrCount_end-hostCpu_instrCount_start,
-		 (hostCpu_instrCount_end - hostCpu_instrCount_start) / uint64(z80_localInstructionCounter) )
-		 }*/
-
-		if (hostCpu_instrCount_startErr == nil) &&
-			(hostCpu_instrCount_endErr == nil) &&
-			(ttid_start == ttid_end) &&
-			(z80_localInstructionCounter > 0) &&
-			(hostCpu_instrCount_end > hostCpu_instrCount_start) {
-
-			avg := uint((hostCpu_instrCount_end - hostCpu_instrCount_start) / uint64(z80_localInstructionCounter))
-
-			// It may happen that the measured values are invalid.
-			// The primary cause of this is that the Go runtime
-			// can move a goroutine to a different OS thread,
-			// without notifying us when it does so.
-			// The majority of these cases is detected by (ttid_start == ttid_end) constraint.
-			eff := speccy.GetEmulationEfficiency()
-			bogusMeasurement := (avg < eff/4) || ((eff > 0) && (avg > eff*4))
-
-			if !bogusMeasurement {
-				speccy.z80_instructionsMeasured += uint64(z80_localInstructionCounter)
-				speccy.hostCpu_instructionCounter += (hostCpu_instrCount_end - hostCpu_instrCount_start)
-			}
-		}
-	}
-
 }
 
 func (speccy *Spectrum48k) renderFrame(completionTime_orNil chan<- time.Time) {

@@ -31,7 +31,7 @@ import (
 	"fmt"
 	"github.com/scottferg/Go-SDL/sdl"
 	"github.com/scottferg/Go-SDL/ttf"
-	"github.com/remogatto/gospeccy/src/spectrum"
+	"github.com/guntars-lemps/gospeccy/spectrum"
 	"os"
 	"time"
 	"unsafe"

@@ -31,13 +31,12 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/remogatto/gospeccy/src/env"
-	"github.com/remogatto/gospeccy/src/formats"
-	"github.com/remogatto/gospeccy/src/interpreter"
-	"github.com/remogatto/gospeccy/src/spectrum"
-	"net/url"
+	"github.com/guntars-lemps/gospeccy/env"
+	"github.com/guntars-lemps/gospeccy/formats"
+	"github.com/guntars-lemps/gospeccy/interpreter"
+	"github.com/guntars-lemps/gospeccy/output/sdl"
+	"github.com/guntars-lemps/gospeccy/spectrum"
 	"os"
-	pathutil "path"
 	"runtime"
 	"runtime/pprof"
 	"strconv"
@@ -45,9 +44,6 @@ import (
 	"sync"
 	"syscall"
 	"time"
-
-	// Pull-in all optional modules into the final executable
-	_ "github.com/remogatto/gospeccy/src/pull_modules"
 )
 
 type handler_SIGTERM struct {
@@ -173,41 +169,20 @@ func main() {
 	env.PublishName("init WaitGroup", &init_waitGroup)
 
 	// Handle options
-	{
-		flag.Usage = func() {
-			fmt.Fprintf(os.Stderr, "GoSpeccy - A ZX Spectrum 48k Emulator written in Go\n\n")
-			fmt.Fprintf(os.Stderr, "Usage:\n\n")
-			fmt.Fprintf(os.Stderr, "\tgospeccy [options] [image.sna]\n\n")
-			fmt.Fprintf(os.Stderr, "Options are:\n\n")
-			flag.PrintDefaults()
-		}
 
-		flag.Parse()
-
-		if *help == true {
-			flag.Usage()
-			return
-		}
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "ZX Spectrum 128k Emulator\n")
+		fmt.Fprintf(os.Stderr, "Usage:\n\n")
+		fmt.Fprintf(os.Stderr, "\tgospeccy [options] [image.sna]\n\n")
+		fmt.Fprintf(os.Stderr, "Options are:\n\n")
+		flag.PrintDefaults()
 	}
 
-	// Start host-CPU profiling (if enabled).
-	// The setup code is based on the contents of Go's file "src/pkg/testing/testing.go".
-	var pprof_file *os.File
-	if *cpuProfile != "" {
-		var err error
+	flag.Parse()
 
-		pprof_file, err = os.Create(*cpuProfile)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s", err)
-			return
-		}
-
-		err = pprof.StartCPUProfile(pprof_file)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "failed to start host-CPU profiling: %s", err)
-			pprof_file.Close()
-			return
-		}
+	if *help == true {
+		flag.Usage()
+		return
 	}
 
 	app := newApplication(*verbose)
@@ -223,10 +198,8 @@ func main() {
 	}
 
 	// Install SIGTERM handler
-	{
-		handler := handler_SIGTERM{app}
-		spectrum.InstallSignalHandler(&handler)
-	}
+	handler := handler_SIGTERM{app}
+	spectrum.InstallSignalHandler(&handler)
 
 	speccy, err := newEmulationCore(app, *acceleratedLoad)
 	if err != nil {
@@ -235,16 +208,11 @@ func main() {
 		return
 	}
 
-	// Run startup scripts.
-	// The startup scripts may change the display settings or enable/disable the audio.
-	// They may also terminate the program.
-	{
-		interpreter.Init(app, flag.Arg(0), speccy)
+	interpreter.Init(app, flag.Arg(0), speccy)
 
-		if app.TerminationInProgress() || app.Terminated() {
-			exit(app)
-			return
-		}
+	if app.TerminationInProgress() || app.Terminated() {
+		exit(app)
+		return
 	}
 
 	// Optional: Read and categorize the contents
@@ -269,67 +237,13 @@ func main() {
 			exit(app)
 			return
 		}
-	} else if *wos != "" {
-		var records []spectrum.WosRecord
-		records, err := spectrum.WosQuery(app, "regexp="+url.QueryEscape(strings.Replace(*wos, " ", "*", -1)))
-		if err != nil {
-			app.PrintfMsg("%s", err)
-			exit(app)
-			return
-		}
-
-		var urls []string
-		var isFreeware []bool
-		for _, record := range records {
-			var freeware bool = (strings.ToLower(record.Publication) == "freeware")
-
-			for _, url := range record.FtpFiles {
-				urls = append(urls, url)
-				isFreeware = append(isFreeware, freeware)
-				if freeware {
-					app.PrintfMsg("[%d] - [Freeware] %s", len(urls)-1, url)
-				} else {
-					app.PrintfMsg("[%d] - [Not freeware] %s", len(urls)-1, url)
-				}
-			}
-		}
-		if len(urls) != 1 {
-			app.PrintfMsg("%d matches", len(urls))
-		} else {
-			app.PrintfMsg("1 match")
-		}
-
-		url, err := ftpget_choice(app, urls, isFreeware)
-		if err != nil {
-			app.PrintfMsg("%s", err)
-			exit(app)
-			return
-		}
-
-		if url != "" {
-			filePath, err := spectrum.WosGet(app, os.Stdout, url)
-			if err != nil {
-				app.PrintfMsg("get %s: %s", url, err)
-				exit(app)
-				return
-			}
-
-			program_orNil, err = formats.ReadProgram(filePath)
-			if err != nil {
-				app.PrintfMsg("%s", err)
-				exit(app)
-				return
-			}
-
-			_, programName = pathutil.Split(filePath)
-		} else {
-			exit(app)
-			return
-		}
 	}
 
 	// Wait until modules are initialized
 	init_waitGroup.Wait()
+
+	// Init SDL
+	go sdl_output.Main()
 
 	// Begin speccy emulation
 	go speccy.EmulatorLoop()

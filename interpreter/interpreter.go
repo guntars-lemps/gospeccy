@@ -3,7 +3,7 @@ package interpreter
 
 import (
 	"fmt"
-	"github.com/remogatto/gospeccy/src/spectrum"
+	"github.com/guntars-lemps/gospeccy/spectrum"
 	"github.com/sbinet/go-eval"
 	"go/ast"
 	"go/parser"
@@ -22,13 +22,12 @@ import (
 // These variables are set only once, before starting new goroutines,
 // so there is no need for controlling concurrent access via a sync.Mutex
 var (
-	app                 *spectrum.Application
-	cmdLineArg          string // The 1st non-flag command-line argument, or empty string
-	speccy              *spectrum.Spectrum48k
-	w                   *eval.World
-	intp                *Interpreter = newInterpreter()
-	stdout              io.Writer    = os.Stdout
-	IgnoreStartupScript              = false
+	app        *spectrum.Application
+	cmdLineArg string // The 1st non-flag command-line argument, or empty string
+	speccy     *spectrum.Spectrum48k
+	w          *eval.World
+	intp       *Interpreter = newInterpreter()
+	stdout     io.Writer    = os.Stdout
 )
 
 var mutex sync.Mutex
@@ -178,7 +177,7 @@ func (i *Interpreter) compile(w *eval.World, fileSet *token.FileSet, sourceCode 
 			addTopLevelVars(s, vars_buffer)
 		}
 		vars = make([]string, 0, len(vars_buffer))
-		for varName, _ := range vars_buffer {
+		for varName := range vars_buffer {
 			vars = append(vars, varName)
 		}
 
@@ -193,7 +192,7 @@ func (i *Interpreter) compile(w *eval.World, fileSet *token.FileSet, sourceCode 
 			addTopLevelVars(d, vars_buffer)
 		}
 		vars = make([]string, 0, len(vars_buffer))
-		for varName, _ := range vars_buffer {
+		for varName := range vars_buffer {
 			vars = append(vars, varName)
 		}
 
@@ -278,15 +277,6 @@ func Init(_app *spectrum.Application, _cmdLineArg string, _speccy *spectrum.Spec
 	if w == nil {
 		w = eval.NewWorld()
 		defineFunctions(w)
-
-		// Run the startup script
-		var err error
-		err = runScript(w, STARTUP_SCRIPT, IgnoreStartupScript /*optional*/)
-		if err != nil {
-			app.PrintfMsg("%s", err)
-			app.RequestExit()
-			return
-		}
 	}
 }
 
