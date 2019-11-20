@@ -8,14 +8,15 @@ import (
 
 const (
 	TAPE_DRIVE_START = iota
-	TAPE_DRIVE_STOP
-	TAPE_DRIVE_PAUSE
 	TAPE_DRIVE_LEADER
 	TAPE_DRIVE_SYNC
+	TAPE_DRIVE_NEWBYTE
 	TAPE_DRIVE_NEWBIT
 	TAPE_DRIVE_HALF2
+	TAPE_DRIVE_PAUSE
 	TAPE_DRIVE_PAUSE_STOP
-	TAPE_DRIVE_NEWBYTE
+	TAPE_DRIVE_PRE_STOP
+	TAPE_DRIVE_STOP
 )
 
 const (
@@ -27,6 +28,7 @@ const (
 	TAPE_HEADER_LEADER_PULSES = 8063
 	TAPE_DATA_LEADER_PULSES   = 3223
 	TAPE_PAUSE                = 3500000
+	TAPE_WAIT_PRE_STOP        = 2000
 )
 
 const TAPE_ACCELERATION_IN_FPS = DefaultFPS * 20
@@ -234,11 +236,7 @@ func (tapeDrive *TapeDrive) doPlay() (endOfBlock bool) {
 		}
 
 	case TAPE_DRIVE_PAUSE:
-		if tapeDrive.earBit == 0xbf {
-			tapeDrive.earBit = 0xff
-		} else {
-			tapeDrive.earBit = 0xbf
-		}
+		tapeDrive.earBit = 0xff
 
 		endOfBlock = true
 		tapeDrive.decelerate()
@@ -247,22 +245,29 @@ func (tapeDrive *TapeDrive) doPlay() (endOfBlock bool) {
 			tapeDrive.timeout = TAPE_PAUSE
 			tapeDrive.state = TAPE_DRIVE_PAUSE_STOP
 		} else {
-			tapeDrive.timeout = 1
-			tapeDrive.state = TAPE_DRIVE_STOP
-
-			tapeDrive.speccy.readFromTape = false
-			tapeDrive.notifyCpuLoadCompleted = true
+			tapeDrive.timeout = TAPE_WAIT_PRE_STOP // hold ear bit 1 for some time
+			tapeDrive.state = TAPE_DRIVE_PRE_STOP
 		}
+
+	case TAPE_DRIVE_PRE_STOP:
+		tapeDrive.earBit = 0xbf // release ear bit
+		tapeDrive.state = TAPE_DRIVE_STOP
+		tapeDrive.speccy.readFromTape = false
+		tapeDrive.notifyCpuLoadCompleted = true
 
 	case TAPE_DRIVE_PAUSE_STOP:
 		tapeDrive.currBlockId++
 		tapeDrive.state = TAPE_DRIVE_START
+
 	}
 
 	return endOfBlock
 }
 
 func (tapeDrive *TapeDrive) getEarBit() uint8 {
+	if tapeDrive.state != TAPE_DRIVE_STOP {
+		tapeDrive.doPlay()
+	}
 	return tapeDrive.earBit
 }
 

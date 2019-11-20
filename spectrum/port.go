@@ -212,8 +212,8 @@ func (p *Ports) frame_end() FrameStatusOfPorts {
 // Returns a copy of the list of border events.  The difference
 // between [the T-state of the 1st event] and [the T-state of the last
 // event] always equals to TStatesPerFrame (if the returned list is
-// not empty).  
-// 
+// not empty).
+//
 // If the returned list is non-empty, its length is at least 2.
 func (p *Ports) getBorderEvents() []BorderEvent {
 	n := len(p.borderEvents)
@@ -275,10 +275,13 @@ func (p *Ports) ReadPortInternal(address uint16, contend bool) byte {
 		}
 
 		// Read tape
-		if p.speccy.readFromTape && (address == 0x7ffe) {
+		if p.speccy.readFromTape {
 			p.tapeReadCount++
 			earBit := p.speccy.tapeDrive.getEarBit()
 			result &= earBit
+		} else {
+			// clear ear bit
+			result = result &^ 0x40
 		}
 	} else if (address & 0x00e0) == 0x0000 {
 		result &= p.speccy.Joystick.GetState()
