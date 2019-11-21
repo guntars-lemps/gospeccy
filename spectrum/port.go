@@ -25,8 +25,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 package spectrum
 
-import "github.com/guntars-lemps/z80"
-
 type FrameStatusOfPorts struct {
 	shouldPlayTheTape bool
 }
@@ -209,10 +207,9 @@ func (p *Ports) frame_end() FrameStatusOfPorts {
 	}
 }
 
-// Returns a copy of the list of border events.  The difference
-// between [the T-state of the 1st event] and [the T-state of the last
-// event] always equals to TStatesPerFrame (if the returned list is
-// not empty).
+// Returns a copy of the list of border events.
+// The difference between [the T-state of the 1st event] and [the T-state of the last event]
+// always equals to TStatesPerFrame (if the returned list is not empty).
 //
 // If the returned list is non-empty, its length is at least 2.
 func (p *Ports) getBorderEvents() []BorderEvent {
@@ -231,10 +228,9 @@ func (p *Ports) getBorderEvents() []BorderEvent {
 	return ret
 }
 
-// Returns a copy of the list of beeper events.  The difference
-// between [the T-state of the 1st event] and [the T-state of the last
-// event] always equals to TStatesPerFrame (if the returned list is
-// not empty).
+// Returns a copy of the list of beeper events.
+// The difference between [the T-state of the 1st event] and [the T-state of the last event]
+// always equals to TStatesPerFrame (if the returned list is not empty).
 //
 // If the returned list is non-empty, its length is at least 2.
 func (p *Ports) getBeeperEvents() []BeeperEvent {
@@ -254,14 +250,6 @@ func (p *Ports) getBeeperEvents() []BeeperEvent {
 }
 
 func (p *Ports) ReadPort(address uint16) byte {
-	return p.ReadPortInternal(address, true)
-}
-
-func (p *Ports) ReadPortInternal(address uint16, contend bool) byte {
-	if contend {
-		p.ContendPortPreio(address)
-		p.ContendPortPostio(address)
-	}
 
 	var result byte = 0xff
 
@@ -294,13 +282,6 @@ func (p *Ports) ReadPortInternal(address uint16, contend bool) byte {
 }
 
 func (p *Ports) WritePort(address uint16, b byte) {
-	p.WritePortInternal(address, b, true)
-}
-
-func (p *Ports) WritePortInternal(address uint16, b byte, contend bool) {
-	if contend {
-		p.ContendPortPreio(address)
-	}
 
 	if (address & 0x0001) == 0 {
 		color := (b & 0x07)
@@ -338,36 +319,4 @@ func (p *Ports) WritePortInternal(address uint16, b byte, contend bool) {
 		}
 	}
 
-	if contend {
-		p.ContendPortPostio(address)
-	}
-}
-
-func contendPort(z80 *z80.Z80, time int) {
-	tstates_p := &z80.Tstates
-	*tstates_p += int(delay_table[*tstates_p])
-	*tstates_p += time
-}
-
-func (p *Ports) ContendPortPreio(address uint16) {
-	if (address & 0xc000) == 0x4000 {
-		contendPort(p.speccy.Cpu, 1)
-	} else {
-		p.speccy.Cpu.Tstates += 1
-	}
-}
-
-func (p *Ports) ContendPortPostio(address uint16) {
-	if (address & 0x0001) == 1 {
-		if (address & 0xc000) == 0x4000 {
-			contendPort(p.speccy.Cpu, 1)
-			contendPort(p.speccy.Cpu, 1)
-			contendPort(p.speccy.Cpu, 1)
-		} else {
-			p.speccy.Cpu.Tstates += 3
-		}
-
-	} else {
-		contendPort(p.speccy.Cpu, 3)
-	}
 }

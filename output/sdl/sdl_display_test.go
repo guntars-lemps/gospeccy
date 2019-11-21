@@ -7,9 +7,9 @@ import (
 	//"image/png"
 
 	//"strings"
-	"github.com/scottferg/Go-SDL/sdl"
 	"github.com/guntars-lemps/gospeccy/formats"
 	"github.com/guntars-lemps/gospeccy/spectrum"
+	"github.com/scottferg/Go-SDL/sdl"
 	"testing"
 	//"unsafe"
 )
@@ -63,7 +63,7 @@ func newSurface() *sdl.Surface {
 // 	memory.init(speccy)
 // 	ula := NewULA()
 // 	ula.init(speccy)
-// 	ula.speccy.Ports.writePortInternal(254, borderColor, false)
+// 	ula.speccy.Ports.writePort(254, borderColor)
 // 	image, _ := ioutil.ReadFile(filename)
 // 	for offset, value := range image {
 // 		speccy.Memory.Write(0x4000+uint16(offset), value)

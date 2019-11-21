@@ -616,7 +616,7 @@ func (speccy *Spectrum48k) loadSnapshot(s formats.Snapshot) error {
 	speccy.Cpu.SetSP(cpu.SP)
 
 	// Border color
-	speccy.Ports.WritePortInternal(0xfe, ula.Border&0x07, false /*contend*/)
+	speccy.Ports.WritePort(0xfe, ula.Border&0x07)
 
 	// Populate memory
 	copy(speccy.Memory.Data()[0x4000:], mem[:])
@@ -688,8 +688,8 @@ func (speccy *Spectrum48k) doOpcodes() {
 		}
 
 		for (speccy.Cpu.Tstates < speccy.Cpu.EventNextEvent) && !speccy.Cpu.Halted {
-			speccy.Memory.ContendRead(speccy.Cpu.PC(), 4)
-			opcode := speccy.Memory.ReadByteInternal(speccy.Cpu.PC())
+			speccy.Cpu.AddTstates(4)
+			opcode := speccy.Memory.Read(speccy.Cpu.PC())
 
 			speccy.Cpu.R = (speccy.Cpu.R + 1) & 0x7f
 			speccy.Cpu.IncPC(1)
@@ -716,8 +716,7 @@ func (speccy *Spectrum48k) doOpcodes() {
 
 			// Repeat emulating the HALT instruction until 'speccy.Cpu.eventNextEvent'
 			for speccy.Cpu.Tstates < speccy.Cpu.EventNextEvent {
-				speccy.Memory.ContendRead(speccy.Cpu.PC(), 4)
-
+				speccy.Cpu.AddTstates(4)
 				speccy.Cpu.R = (speccy.Cpu.R + 1) & 0x7f
 				z80_localInstructionCounter++
 			}
