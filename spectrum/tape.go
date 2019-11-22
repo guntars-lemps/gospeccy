@@ -143,7 +143,7 @@ func (tapeDrive *TapeDrive) decelerate() {
 }
 
 func (tapeDrive *TapeDrive) doPlay() (endOfBlock bool) {
-	now := int(tapeDrive.speccy.ula.frame)*TStatesPerFrame + tapeDrive.speccy.Cpu.Tstates
+	now := int(tapeDrive.speccy.ula.frame)*TStatesPerFrame + tapeDrive.speccy.Cpu.GetTstates()
 
 	tapeDrive.timeout -= now - tapeDrive.timeLastIn
 	tapeDrive.timeLastIn = now

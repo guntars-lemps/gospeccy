@@ -101,37 +101,7 @@ func (keyboard *Keyboard) commandLoop() {
 				cmd.done <- true
 
 			case Cmd_SendLoad:
-				if cmd.romType == ROM_OPENSE {
-					// Sleep for 30 frames
-					time.Sleep(30e9 / time.Duration(keyboard.speccy.GetCurrentFPS()))
-
-					// l o a d
-					for _, keycode := range []uint{KEY_L, KEY_O, KEY_A, KEY_D} {
-						keyboard.KeyDown(keycode)
-						keyboard.delayAfterKeyDown()
-						keyboard.KeyUp(keycode)
-						keyboard.delayAfterKeyUp()
-					}
-
-					// " "
-					keyboard.KeyDown(KEY_SymbolShift)
-					{
-						keyboard.KeyDown(KEY_P)
-						keyboard.delayAfterKeyDown()
-						keyboard.KeyUp(KEY_P)
-						keyboard.delayAfterKeyUp()
-
-						keyboard.KeyDown(KEY_P)
-						keyboard.delayAfterKeyDown()
-						keyboard.KeyUp(KEY_P)
-						keyboard.delayAfterKeyUp()
-					}
-					keyboard.KeyUp(KEY_SymbolShift)
-
-					keyboard.KeyDown(KEY_Enter)
-					keyboard.delayAfterKeyDown()
-					keyboard.KeyUp(KEY_Enter)
-				} else {
+				if cmd.romType == ROM48 {
 					// LOAD
 					keyboard.KeyDown(KEY_J)
 					keyboard.delayAfterKeyDown()
@@ -269,137 +239,137 @@ type keyCell struct {
 }
 
 var keyCodes = map[uint]keyCell{
-	KEY_1: keyCell{row: 3, mask: 0x01},
-	KEY_2: keyCell{row: 3, mask: 0x02},
-	KEY_3: keyCell{row: 3, mask: 0x04},
-	KEY_4: keyCell{row: 3, mask: 0x08},
-	KEY_5: keyCell{row: 3, mask: 0x10},
-	KEY_6: keyCell{row: 4, mask: 0x10},
-	KEY_7: keyCell{row: 4, mask: 0x08},
-	KEY_8: keyCell{row: 4, mask: 0x04},
-	KEY_9: keyCell{row: 4, mask: 0x02},
-	KEY_0: keyCell{row: 4, mask: 0x01},
+	KEY_1: {row: 3, mask: 0x01},
+	KEY_2: {row: 3, mask: 0x02},
+	KEY_3: {row: 3, mask: 0x04},
+	KEY_4: {row: 3, mask: 0x08},
+	KEY_5: {row: 3, mask: 0x10},
+	KEY_6: {row: 4, mask: 0x10},
+	KEY_7: {row: 4, mask: 0x08},
+	KEY_8: {row: 4, mask: 0x04},
+	KEY_9: {row: 4, mask: 0x02},
+	KEY_0: {row: 4, mask: 0x01},
 
-	KEY_Q: keyCell{row: 2, mask: 0x01},
-	KEY_W: keyCell{row: 2, mask: 0x02},
-	KEY_E: keyCell{row: 2, mask: 0x04},
-	KEY_R: keyCell{row: 2, mask: 0x08},
-	KEY_T: keyCell{row: 2, mask: 0x10},
-	KEY_Y: keyCell{row: 5, mask: 0x10},
-	KEY_U: keyCell{row: 5, mask: 0x08},
-	KEY_I: keyCell{row: 5, mask: 0x04},
-	KEY_O: keyCell{row: 5, mask: 0x02},
-	KEY_P: keyCell{row: 5, mask: 0x01},
+	KEY_Q: {row: 2, mask: 0x01},
+	KEY_W: {row: 2, mask: 0x02},
+	KEY_E: {row: 2, mask: 0x04},
+	KEY_R: {row: 2, mask: 0x08},
+	KEY_T: {row: 2, mask: 0x10},
+	KEY_Y: {row: 5, mask: 0x10},
+	KEY_U: {row: 5, mask: 0x08},
+	KEY_I: {row: 5, mask: 0x04},
+	KEY_O: {row: 5, mask: 0x02},
+	KEY_P: {row: 5, mask: 0x01},
 
-	KEY_A:     keyCell{row: 1, mask: 0x01},
-	KEY_S:     keyCell{row: 1, mask: 0x02},
-	KEY_D:     keyCell{row: 1, mask: 0x04},
-	KEY_F:     keyCell{row: 1, mask: 0x08},
-	KEY_G:     keyCell{row: 1, mask: 0x10},
-	KEY_H:     keyCell{row: 6, mask: 0x10},
-	KEY_J:     keyCell{row: 6, mask: 0x08},
-	KEY_K:     keyCell{row: 6, mask: 0x04},
-	KEY_L:     keyCell{row: 6, mask: 0x02},
-	KEY_Enter: keyCell{row: 6, mask: 0x01},
+	KEY_A:     {row: 1, mask: 0x01},
+	KEY_S:     {row: 1, mask: 0x02},
+	KEY_D:     {row: 1, mask: 0x04},
+	KEY_F:     {row: 1, mask: 0x08},
+	KEY_G:     {row: 1, mask: 0x10},
+	KEY_H:     {row: 6, mask: 0x10},
+	KEY_J:     {row: 6, mask: 0x08},
+	KEY_K:     {row: 6, mask: 0x04},
+	KEY_L:     {row: 6, mask: 0x02},
+	KEY_Enter: {row: 6, mask: 0x01},
 
-	KEY_CapsShift:   keyCell{row: 0, mask: 0x01},
-	KEY_Z:           keyCell{row: 0, mask: 0x02},
-	KEY_X:           keyCell{row: 0, mask: 0x04},
-	KEY_C:           keyCell{row: 0, mask: 0x08},
-	KEY_V:           keyCell{row: 0, mask: 0x10},
-	KEY_B:           keyCell{row: 7, mask: 0x10},
-	KEY_N:           keyCell{row: 7, mask: 0x08},
-	KEY_M:           keyCell{row: 7, mask: 0x04},
-	KEY_SymbolShift: keyCell{row: 7, mask: 0x02},
-	KEY_Space:       keyCell{row: 7, mask: 0x01},
+	KEY_CapsShift:   {row: 0, mask: 0x01},
+	KEY_Z:           {row: 0, mask: 0x02},
+	KEY_X:           {row: 0, mask: 0x04},
+	KEY_C:           {row: 0, mask: 0x08},
+	KEY_V:           {row: 0, mask: 0x10},
+	KEY_B:           {row: 7, mask: 0x10},
+	KEY_N:           {row: 7, mask: 0x08},
+	KEY_M:           {row: 7, mask: 0x04},
+	KEY_SymbolShift: {row: 7, mask: 0x02},
+	KEY_Space:       {row: 7, mask: 0x01},
 }
 
 var SDL_KeyMap = map[string][]uint{
-	"0": []uint{KEY_0},
-	"1": []uint{KEY_1},
-	"2": []uint{KEY_2},
-	"3": []uint{KEY_3},
-	"4": []uint{KEY_4},
-	"5": []uint{KEY_5},
-	"6": []uint{KEY_6},
-	"7": []uint{KEY_7},
-	"8": []uint{KEY_8},
-	"9": []uint{KEY_9},
+	"0": {KEY_0},
+	"1": {KEY_1},
+	"2": {KEY_2},
+	"3": {KEY_3},
+	"4": {KEY_4},
+	"5": {KEY_5},
+	"6": {KEY_6},
+	"7": {KEY_7},
+	"8": {KEY_8},
+	"9": {KEY_9},
 
-	"a": []uint{KEY_A},
-	"b": []uint{KEY_B},
-	"c": []uint{KEY_C},
-	"d": []uint{KEY_D},
-	"e": []uint{KEY_E},
-	"f": []uint{KEY_F},
-	"g": []uint{KEY_G},
-	"h": []uint{KEY_H},
-	"i": []uint{KEY_I},
-	"j": []uint{KEY_J},
-	"k": []uint{KEY_K},
-	"l": []uint{KEY_L},
-	"m": []uint{KEY_M},
-	"n": []uint{KEY_N},
-	"o": []uint{KEY_O},
-	"p": []uint{KEY_P},
-	"q": []uint{KEY_Q},
-	"r": []uint{KEY_R},
-	"s": []uint{KEY_S},
-	"t": []uint{KEY_T},
-	"u": []uint{KEY_U},
-	"v": []uint{KEY_V},
-	"w": []uint{KEY_W},
-	"x": []uint{KEY_X},
-	"y": []uint{KEY_Y},
-	"z": []uint{KEY_Z},
+	"a": {KEY_A},
+	"b": {KEY_B},
+	"c": {KEY_C},
+	"d": {KEY_D},
+	"e": {KEY_E},
+	"f": {KEY_F},
+	"g": {KEY_G},
+	"h": {KEY_H},
+	"i": {KEY_I},
+	"j": {KEY_J},
+	"k": {KEY_K},
+	"l": {KEY_L},
+	"m": {KEY_M},
+	"n": {KEY_N},
+	"o": {KEY_O},
+	"p": {KEY_P},
+	"q": {KEY_Q},
+	"r": {KEY_R},
+	"s": {KEY_S},
+	"t": {KEY_T},
+	"u": {KEY_U},
+	"v": {KEY_V},
+	"w": {KEY_W},
+	"x": {KEY_X},
+	"y": {KEY_Y},
+	"z": {KEY_Z},
 
-	"return":      []uint{KEY_Enter},
-	"space":       []uint{KEY_Space},
-	"left shift":  []uint{KEY_CapsShift},
-	"right shift": []uint{KEY_CapsShift},
-	"left ctrl":   []uint{KEY_SymbolShift},
-	"right ctrl":  []uint{KEY_SymbolShift},
+	"return":      {KEY_Enter},
+	"space":       {KEY_Space},
+	"left shift":  {KEY_CapsShift},
+	"right shift": {KEY_CapsShift},
+	"left ctrl":   {KEY_SymbolShift},
+	"right ctrl":  {KEY_SymbolShift},
 
 	//"escape":    []uint{KEY_CapsShift, KEY_1},
 	//"caps lock": []uint{KEY_CapsShift, KEY_2}, // FIXME: SDL never sends the sdl.KEYUP event
-	"left":      []uint{KEY_CapsShift, KEY_5},
-	"down":      []uint{KEY_CapsShift, KEY_6},
-	"up":        []uint{KEY_CapsShift, KEY_7},
-	"right":     []uint{KEY_CapsShift, KEY_8},
-	"backspace": []uint{KEY_CapsShift, KEY_0},
+	"left":      {KEY_CapsShift, KEY_5},
+	"down":      {KEY_CapsShift, KEY_6},
+	"up":        {KEY_CapsShift, KEY_7},
+	"right":     {KEY_CapsShift, KEY_8},
+	"backspace": {KEY_CapsShift, KEY_0},
 
-	"-": []uint{KEY_SymbolShift, KEY_J},
+	"-": {KEY_SymbolShift, KEY_J},
 	//"_": []uint{KEY_SymbolShift, KEY_0},
-	"=": []uint{KEY_SymbolShift, KEY_L},
+	"=": {KEY_SymbolShift, KEY_L},
 	//"+": []uint{KEY_SymbolShift, KEY_K},
-	"[": []uint{KEY_SymbolShift, KEY_8}, // Maps to "("
-	"]": []uint{KEY_SymbolShift, KEY_9}, // Maps to ")"
-	";": []uint{KEY_SymbolShift, KEY_O},
+	"[": {KEY_SymbolShift, KEY_8}, // Maps to "("
+	"]": {KEY_SymbolShift, KEY_9}, // Maps to ")"
+	";": {KEY_SymbolShift, KEY_O},
 	//":": []uint{KEY_SymbolShift, KEY_Z},
-	"'": []uint{KEY_SymbolShift, KEY_7},
+	"'": {KEY_SymbolShift, KEY_7},
 	//"\"": []uint{KEY_SymbolShift, KEY_P},
-	",": []uint{KEY_SymbolShift, KEY_N},
-	".": []uint{KEY_SymbolShift, KEY_M},
-	"/": []uint{KEY_SymbolShift, KEY_V},
+	",": {KEY_SymbolShift, KEY_N},
+	".": {KEY_SymbolShift, KEY_M},
+	"/": {KEY_SymbolShift, KEY_V},
 	//"<": []uint{KEY_SymbolShift, KEY_R},
 	//">": []uint{KEY_SymbolShift, KEY_T},
 	//"?": []uint{KEY_SymbolShift, KEY_C},
 
 	// Keypad
-	"[0]": []uint{KEY_0},
-	"[1]": []uint{KEY_1},
-	"[2]": []uint{KEY_2},
-	"[3]": []uint{KEY_3},
-	"[4]": []uint{KEY_4},
-	"[5]": []uint{KEY_5},
-	"[6]": []uint{KEY_6},
-	"[7]": []uint{KEY_7},
-	"[8]": []uint{KEY_8},
-	"[9]": []uint{KEY_9},
-	"[*]": []uint{KEY_SymbolShift, KEY_B},
-	"[-]": []uint{KEY_SymbolShift, KEY_J},
-	"[+]": []uint{KEY_SymbolShift, KEY_K},
-	"[/]": []uint{KEY_SymbolShift, KEY_V},
+	"[0]": {KEY_0},
+	"[1]": {KEY_1},
+	"[2]": {KEY_2},
+	"[3]": {KEY_3},
+	"[4]": {KEY_4},
+	"[5]": {KEY_5},
+	"[6]": {KEY_6},
+	"[7]": {KEY_7},
+	"[8]": {KEY_8},
+	"[9]": {KEY_9},
+	"[*]": {KEY_SymbolShift, KEY_B},
+	"[-]": {KEY_SymbolShift, KEY_J},
+	"[+]": {KEY_SymbolShift, KEY_K},
+	"[/]": {KEY_SymbolShift, KEY_V},
 }
 
 func init() {

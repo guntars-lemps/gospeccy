@@ -202,16 +202,16 @@ func FontPath(fileName string) (string, error) {
 }
 
 // Reads the 16KB ROM from the specified file
-func ReadROM(path string) (*[0x4000]byte, error) {
+func ReadROM(path string) (*[0x8000]byte, error) {
 	fileData, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
-	if len(fileData) != 0x4000 {
+	if (len(fileData) != 0x4000) && (len(fileData) != 0x8000) {
 		return nil, errors.New(path + ":invalid ROM file")
 	}
 
-	var rom [0x4000]byte
+	var rom [0x8000]byte
 	copy(rom[:], fileData)
 	return &rom, nil
 }

@@ -1,8 +1,8 @@
 package spectrum
 
 import (
-	"time"
 	"github.com/guntars-lemps/z80"
+	"time"
 )
 
 type ula_byte_t struct {
@@ -124,7 +124,7 @@ func (ula *ULA) screenBitmapWrite(address uint16, oldValue byte, newValue byte) 
 			ula_lineStart_tstate := screenline_start_tstates[rel_addr>>BytesPerLine_log2]
 			x, _ := screenAddr_to_xy(address)
 			ula_tstate := ula_lineStart_tstate + int(x>>PIXELS_PER_TSTATE_LOG2)
-			if ula_tstate <= ula.z80.Tstates {
+			if ula_tstate <= ula.z80.GetTstates() {
 				// Remember the value read by ULA
 				ula.bitmap[rel_addr] = ula_byte_t{true, oldValue}
 			}
@@ -150,10 +150,10 @@ func (ula *ULA) screenAttrWrite(address uint16, oldValue byte, newValue byte) {
 			ula_tstate := int(FIRST_SCREEN_BYTE + y*TSTATES_PER_LINE + (x >> PIXELS_PER_TSTATE_LOG2))
 
 			for i := 0; i < 8; i++ {
-				if ula_tstate <= CPU.Tstates {
+				if ula_tstate <= CPU.GetTstates() {
 					ula_attr := &ula.attr[ofs]
 					if !ula_attr.valid || (ula_tstate > ula_attr.tstate) {
-						*ula_attr = ula_attr_t{true, oldValue, CPU.Tstates}
+						*ula_attr = ula_attr_t{true, oldValue, CPU.GetTstates()}
 					}
 					ofs += BytesPerLine
 					ula_tstate += TSTATES_PER_LINE

@@ -27,7 +27,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 package spectrum
 
 import (
-	"bytes"
+	_ "bytes"
 	"errors"
 	"sync"
 	"time"
@@ -38,13 +38,13 @@ import (
 
 const TStatesPerFrame = 69888 // Number of T-states per frame
 const InterruptLength = 32    // How long does an interrupt last in T-states
-const DefaultFPS = 50.08
+const DefaultFPS = 50
 
 type RomType int
 
 const (
-	ROM_UNKNOWN RomType = iota
-	ROM_OPENSE          // OpenSE BASIC (http://www.worldofspectrum.org/infoseekid.cgi?id=0027510)
+	ROM48 RomType = iota
+	ROM128
 )
 
 type DisplayInfo struct {
@@ -73,7 +73,7 @@ type Spectrum48k struct {
 
 	Ports *Ports
 
-	rom     [0x4000]byte
+	rom     [0x8000]byte
 	romType RomType
 
 	// The current display refresh frequency.
@@ -190,7 +190,7 @@ type Cmd_SetAcceleratedLoad struct {
 //
 // To start the actual emulation-loop, create a separate goroutine for
 // running the object's EmulatorLoop function.
-func NewSpectrum48k(app *Application, rom [0x4000]byte) *Spectrum48k {
+func NewSpectrum48k(app *Application, rom [0x8000]byte) *Spectrum48k {
 	memory := NewMemory()
 	keyboard := NewKeyboard()
 	joystick := NewJoystick()
@@ -208,7 +208,7 @@ func NewSpectrum48k(app *Application, rom [0x4000]byte) *Spectrum48k {
 		Joystick:       joystick,
 		Ports:          ports,
 		rom:            rom,
-		romType:        ROM_UNKNOWN,
+		romType:        ROM48,
 		displays:       make([]*DisplayInfo, 0),
 		audioReceivers: make([]AudioReceiver, 0),
 		app:            app,
@@ -506,16 +506,7 @@ func (speccy *Spectrum48k) reset(systemROMLoaded_orNil chan<- <-chan bool) error
 	// Copy the ROM image into the first 16k of memory
 	copy(speccy.Memory.Data()[0:0x4000], speccy.rom[:])
 
-	// ROM type detection
-	if bytes.Contains(speccy.rom[:], []byte("1981 Nine Tiles Networks")) {
-		speccy.romType = ROM_OPENSE
-	}
-
-	// OpenSE BASIC initializes almost immediately
-	if (speccy.systemROMLoaded_orNil != nil) && (speccy.romType == ROM_OPENSE) {
-		speccy.systemROMLoaded_orNil <- true
-		speccy.systemROMLoaded_orNil = nil
-	}
+	speccy.romType = ROM48
 
 	return nil
 }
@@ -616,12 +607,10 @@ func (speccy *Spectrum48k) loadSnapshot(s formats.Snapshot) error {
 	speccy.Cpu.SetSP(cpu.SP)
 
 	// Border color
-	speccy.Ports.WritePort(0xfe, ula.Border&0x07)
+	speccy.Ports.Write(0xfe, ula.Border&0x07)
 
 	// Populate memory
 	copy(speccy.Memory.Data()[0x4000:], mem[:])
-
-	speccy.Cpu.Tstates = int(cpu.Tstate)
 
 	return nil
 }
@@ -687,16 +676,13 @@ func (speccy *Spectrum48k) doOpcodes() {
 			}
 		}
 
-		for (speccy.Cpu.Tstates < speccy.Cpu.EventNextEvent) && !speccy.Cpu.Halted {
-			speccy.Cpu.AddTstates(4)
-			opcode := speccy.Memory.Read(speccy.Cpu.PC())
-
-			speccy.Cpu.R = (speccy.Cpu.R + 1) & 0x7f
-			speccy.Cpu.IncPC(1)
-
+		for (speccy.Cpu.GetTstates() < speccy.Cpu.EventNextEvent) && !speccy.Cpu.Halted {
+			//speccy.Cpu.DoHalt()
+			//z80.OpcodesMap[opcode](speccy.Cpu)
+			//opcode := speccy.Memory.Read(speccy.Cpu.PC())
+			//speccy.Cpu.IncPC(1)
+			speccy.Cpu.DoOpcode()
 			z80_localInstructionCounter++
-
-			z80.OpcodesMap[opcode](speccy.Cpu)
 
 			if readFromTape {
 				endOfBlock := speccy.tapeDrive.doPlay()
@@ -709,15 +695,15 @@ func (speccy *Spectrum48k) doOpcodes() {
 		}
 
 		if speccy.Cpu.Halted {
+
 			speccy.shouldPlayTheTape = 0
 			if speccy.tapeDrive != nil {
 				speccy.tapeDrive.decelerate()
 			}
 
 			// Repeat emulating the HALT instruction until 'speccy.Cpu.eventNextEvent'
-			for speccy.Cpu.Tstates < speccy.Cpu.EventNextEvent {
-				speccy.Cpu.AddTstates(4)
-				speccy.Cpu.R = (speccy.Cpu.R + 1) & 0x7f
+			for speccy.Cpu.GetTstates() < speccy.Cpu.EventNextEvent {
+				speccy.Cpu.DoHalt()
 				z80_localInstructionCounter++
 			}
 		}
@@ -729,7 +715,7 @@ func (speccy *Spectrum48k) renderFrame(completionTime_orNil chan<- time.Time) {
 	speccy.ula.frame_begin()
 
 	// Execute instructions corresponding to one screen frame
-	speccy.Cpu.Tstates = (speccy.Cpu.Tstates % TStatesPerFrame)
+	speccy.Cpu.ModTstates(TStatesPerFrame)
 	speccy.Cpu.Interrupt()
 	speccy.Cpu.EventNextEvent = TStatesPerFrame
 	speccy.doOpcodes()

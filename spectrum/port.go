@@ -249,7 +249,7 @@ func (p *Ports) getBeeperEvents() []BeeperEvent {
 	return ret
 }
 
-func (p *Ports) ReadPort(address uint16) byte {
+func (p *Ports) Read(address uint16) byte {
 
 	var result byte = 0xff
 
@@ -281,7 +281,7 @@ func (p *Ports) ReadPort(address uint16) byte {
 	return result
 }
 
-func (p *Ports) WritePort(address uint16, b byte) {
+func (p *Ports) Write(address uint16, b byte) {
 
 	if (address & 0x0001) == 0 {
 		color := (b & 0x07)
@@ -291,10 +291,10 @@ func (p *Ports) WritePort(address uint16, b byte) {
 			p.speccy.ula.setBorderColor(color)
 
 			last := len(p.borderEvents) - 1
-			if p.borderEvents[last].TState == p.speccy.Cpu.Tstates {
+			if p.borderEvents[last].TState == p.speccy.Cpu.GetTstates() {
 				p.borderEvents[last].Color = color
 			} else {
-				p.borderEvents = append(p.borderEvents, BorderEvent{p.speccy.Cpu.Tstates, color})
+				p.borderEvents = append(p.borderEvents, BorderEvent{p.speccy.Cpu.GetTstates(), color})
 			}
 		}
 
@@ -311,10 +311,10 @@ func (p *Ports) WritePort(address uint16, b byte) {
 			p.beeperLevel = newBeeperLevel
 
 			last := len(p.beeperEvents) - 1
-			if p.beeperEvents[last].TState == p.speccy.Cpu.Tstates {
+			if p.beeperEvents[last].TState == p.speccy.Cpu.GetTstates() {
 				p.beeperEvents[last].Level = newBeeperLevel
 			} else {
-				p.beeperEvents = append(p.beeperEvents, BeeperEvent{p.speccy.Cpu.Tstates, newBeeperLevel})
+				p.beeperEvents = append(p.beeperEvents, BeeperEvent{p.speccy.Cpu.GetTstates(), newBeeperLevel})
 			}
 		}
 	}
