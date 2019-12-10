@@ -29,11 +29,10 @@ package spectrum
 import (
 	_ "bytes"
 	"errors"
-	"sync"
-	"time"
-	//	"github.com/remogatto/Go-PerfEvents"
 	"github.com/guntars-lemps/gospeccy/formats"
 	"github.com/guntars-lemps/z80"
+	"sync"
+	"time"
 )
 
 const TStatesPerFrame = 69888 // Number of T-states per frame

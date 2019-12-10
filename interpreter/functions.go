@@ -317,13 +317,6 @@ func wrapper_acceleratedLoad(t *eval.Thread, in []eval.Value, out []eval.Value) 
 	speccy.CommandChannel <- spectrum.Cmd_SetAcceleratedLoad{enable}
 }
 
-type WOS struct {
-	URL         string
-	MachineType string
-	Publication string
-	Score       string
-}
-
 func url_printer(URL eval.Value) string {
 	s := URL.(eval.StringValue).Get(nil)
 
@@ -341,13 +334,10 @@ func url_printer(URL eval.Value) string {
 			} else {
 				buf.WriteRune(rune)
 			}
-
 			i++
 		}
-
 		s = buf.String()
 	}
-
 	return s
 }
 

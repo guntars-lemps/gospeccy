@@ -1,4 +1,3 @@
-
 package spectrum
 
 import (
@@ -137,8 +136,7 @@ func (app *Application) addEventLoop(e *EventLoop) bool {
 		return false
 	}
 
-	// At this point: The application is running,
-	//                or it is in the process of being terminated.
+	// At this point the application is running, or it is in the process of being terminated.
 
 	app.eventLoops = append(app.eventLoops, e)
 	app.mutex.Unlock()

@@ -40,8 +40,8 @@ const (
 	ScreenWidth_Attr_log2 = 5                // =log2(ScreenWidth_Attr)
 	ScreenHeight_Attr     = ScreenHeight / 8 // =24
 
-	ScreenBorderX = 32
-	ScreenBorderY = 32
+	ScreenBorderX = 48
+	ScreenBorderY = 48
 
 	// Screen dimensions, including the border
 	TotalScreenWidth  = ScreenWidth + ScreenBorderX*2

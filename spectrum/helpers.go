@@ -46,16 +46,15 @@ import (
 
 var DefaultUserDir = path.Join(os.Getenv("HOME"), ".config", "gospeccy")
 var srcDir string
+var customSearchPaths []string
+var downloadPath string
+var mutex sync.RWMutex
 
 func init() {
 	gopaths := os.Getenv("GOPATH")
 	gopath0 := strings.Split(gopaths, string(os.PathListSeparator))[0]
-	srcDir = path.Join(gopath0, "src", "github.com", "remogatto", "gospeccy")
+	srcDir = path.Join(gopath0, "src", "github.com", "guntarslemps", "gospeccy")
 }
-
-var customSearchPaths []string
-var downloadPath string
-var mutex sync.RWMutex
 
 func AddCustomSearchPath(path string) {
 	mutex.Lock()
@@ -111,7 +110,7 @@ func appendCustomSearchPaths(paths *[]string) {
 //
 // The search is performed in this order:
 // 1. ./programs/
-// 2. $GOPATH/src/github.com/remogatto/gospeccy/programs/
+// 2. $GOPATH/src/github.com/guntarslemps/gospeccy/programs/
 // 3. Custom search paths
 // 4. Download path
 func ProgramPath(fileName string) (string, error) {
@@ -137,7 +136,7 @@ func ProgramPath(fileName string) (string, error) {
 // The search is performed in this order:
 // 1. ./roms/
 // 2. $HOME/.config/gospeccy/roms/
-// 3. $GOPATH/src/github.com/remogatto/gospeccy/roms/
+// 3. $GOPATH/src/github.com/guntarslemps/gospeccy/roms/
 // 4. Custom search paths
 func SystemRomPath(fileName string) (string, error) {
 	var (
@@ -161,7 +160,7 @@ func SystemRomPath(fileName string) (string, error) {
 // The search is performed in this order:
 // 1. ./scripts/
 // 2. $HOME/.config/gospeccy/scripts/
-// 3. $GOPATH/src/github.com/remogatto/gospeccy/scripts/
+// 3. $GOPATH/src/github.com/guntarslemps/gospeccy/scripts/
 // 4. Custom search paths
 func ScriptPath(fileName string) (string, error) {
 	var (
@@ -185,7 +184,7 @@ func ScriptPath(fileName string) (string, error) {
 // The search is performed in this order:
 // 1. ./fonts/
 // 2. $HOME/.config/gospeccy/fonts/
-// 3. $GOPATH/src/github.com/remogatto/gospeccy/fonts/
+// 3. $GOPATH/src/github.com/guntarslemps/gospeccy/fonts/
 // 4. Custom search paths
 func FontPath(fileName string) (string, error) {
 	var (
